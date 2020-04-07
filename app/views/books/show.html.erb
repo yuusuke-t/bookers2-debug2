@@ -6,7 +6,7 @@
 		<%= render 'users/profile', user: @user %>
 
 		<h2>New book</h2>
-		<%= render 'books/newform', book: @book %>
+		<%= render 'books/newform', book: @new_book %>
 
 	</div>
 
@@ -23,12 +23,57 @@
 					</td>
 					<td><%= link_to @book.title, book_path(@book) %></td>
 					<td><%= @book.body %></td>
+					<td>
+						いいね数:<%= @book.favorites.count %>
+						<% if @book.favorited_by?(current_user) %>
+								<%= link_to book_favorites_path(@book),method: :delete do %>
+									<i class="fa fa-heart" aria-hidden="true" style="color: red;">いいね外す</i>
+								<% end %>
+						<% else %>
+								<%= link_to book_favorites_path(@book),method: :post do %>
+									<i class="fa fa-heart-o" area-hidden="true">いいねする</i>
+								<% end %>
+						<% end %>
+					</td>
+					<td>コメント数:<%= @book.book_comments.count %></td>
 					<% if @book.user == current_user %>
 						<td><%= link_to "Edit",edit_book_path(@book), class: "btn-sm btn-success edit_book_#{@book.id}" %></td>
 						<td><%= link_to "Destroy",@book, method: :delete, data: {confirm: "本当に削除してもよろしいですか？"}, class: "btn-sm btn-danger destroy_book_#{@book.id}" %></td>
 					<% end %>
 				</tr>
-			</table>
+				<tr>
+					<th>
+						<h3>Book comment</h3>
+					</th>
+				</tr>
+				<th>name</th>
+				<th>comment</th>
+				<% @book.book_comments.each do |book_comment| %>
+				<tr>
+					<td><%= book_comment.user.name%></td>
+					<td><%= book_comment.comment %></td>
+					<td><% if user_signed_in? && book_comment.user_id == current_user.id %>
+							<%= button_to "Destroy", book_comments_path, method: :delete, params: { comment_id: book_comment.id } %>
+						<% end %>
+					</td>
+				</tr>
+				<% end %>
+		</table>
+		<%= form_with model:@book_comment ,url: book_comments_path,method: :post,local: true do |f| %>
+		<% if @book_comment.errors.any? %>
+		  <div class="alert alert-warning">
+		  	<%= @book_comment.errors.count %>errors prohibited this obj from being saved:
+		    <ul>
+		      <% @book_comment.errors.full_messages.each do |message| %>
+		        <li><%= message %></li>
+		      <% end %>
+		    </ul>
+		  </div>
+		<% end %>
+		<%= f.hidden_field :book_id, :value => @book.id %>
+			<%= f.text_area :comment %>
+			<%= f.submit %>
+		<% end %>
 
 	</div>
 </div>
